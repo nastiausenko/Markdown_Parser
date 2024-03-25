@@ -1,6 +1,11 @@
 package org.example;
 
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 public class MarkdownParser {
     private final String path;
     private final String out;
@@ -12,5 +17,18 @@ public class MarkdownParser {
     public MarkdownParser(String path, String out) {
         this.path = path;
         this.out = out;
+    }
+
+    public void parse() throws IOException {
+        String file = readFile();
+        System.out.println(file);
+    }
+
+    private String readFile() throws IOException {
+        Path pathToFile = Paths.get(path);
+        if(!Files.exists(pathToFile)) {
+            throw new IOException("File not found");
+        }
+        return Files.readString(pathToFile);
     }
 }
