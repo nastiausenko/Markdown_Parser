@@ -1,17 +1,22 @@
 package org.example;
 
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 
 public class MarkdownParser {
     private final String path;
     private final String out;
-    private final String boldRegex = "(?<![\\\\w`*\\u0400-\\u04FF])\\\\*\\\\*(\\\\S(?:.*?\\\\S)?)\\\\*\\\\*(?![\\\\w`*\\u0400-\\u04FF])";
-    private final String italicRegex = "(?<![\\\\w`*\\\\u0400-\\\\u04FF])_(\\\\S(?:.*?\\\\S)?)_(?![\\\\w`*\\\\u0400-\\\\u04FF])";
-    private final String monospacedRegex = "(?<![\\\\w`*\\\\u0400-\\\\u04FF])`(\\\\S(?:.*?\\\\S)?)`(?![\\\\w`*\\\\u0400-\\\\u04FF])";
+    private static final String boldRegex = "(?<=[ ,.:;\\n\\t]|^)\\*\\*(?=\\S)(.+?)(?<=\\S)\\*\\*(?=[ ,.:;\\n\\t]|$)";
+    private static final String italicRegex = "(?<=[ ,.:;\\n\\t]|^)_(?=\\S)(.+?)(?<=\\S)_(?=[ ,.:;\\n\\t]|$)";
+    private static final String monospacedRegex = "(?<=[ ,.:;\\n\\t]|^)`(?=\\S)(.+?)(?=\\S)`(?=[ ,.:;\\n\\t]|$)";
+
     private final String preformatedRegex = "(?m)(^\\\\n?|^)```(.*?)```(\\\\n?|$)";
 
     public MarkdownParser(String path, String out) {
@@ -21,6 +26,7 @@ public class MarkdownParser {
 
     public void parse() throws IOException {
         String file = readFile();
+        file = processInlineElements(file);
 
         if (out != null) {
             writeFile(file, out);
@@ -43,5 +49,42 @@ public class MarkdownParser {
             Files.createDirectories(outputPath.getParent());
         }
         Files.writeString(outputPath, text);
+    }
+
+    private String processInlineElements(String html) {
+        List<String> boldBlocks = getMatchPatternList(boldRegex, html);
+        List<String> monospacedBlocks = getMatchPatternList(monospacedRegex, html);
+        List<String> italicBlocks = getMatchPatternList(italicRegex, html);
+
+        checkNested(boldRegex, italicRegex, monospacedBlocks);
+        checkNested(boldRegex, monospacedRegex, italicBlocks);
+        checkNested(italicRegex, monospacedRegex, boldBlocks);
+
+        html = html.replaceAll(boldRegex, "<b>$1</b>");
+        html = html.replaceAll(italicRegex, "<i>$1</i>");
+        html = html.replaceAll(monospacedRegex, "<tt>$1</tt>");
+        return html;
+    }
+
+    private void checkNested(String firstRegex, String secondRegex, List<String> regexes) {
+        Pattern firstPattern = Pattern.compile(firstRegex, Pattern.DOTALL);
+        Pattern secondPattern = Pattern.compile(secondRegex, Pattern.DOTALL);
+        for (String regex : regexes) {
+            Matcher firstMatcher = firstPattern.matcher(regex);
+            Matcher secondMatcher = secondPattern.matcher(regex);
+            if (firstMatcher.find() || secondMatcher.find()) {
+                throw new IllegalArgumentException("ERROR: There is nested markers");
+            }
+        }
+    }
+
+    private List<String> getMatchPatternList(String regex, String html) {
+        List<String> regexList = new ArrayList<>();
+        Pattern pattern = Pattern.compile(regex, Pattern.DOTALL);
+        Matcher matcher = pattern.matcher(html);
+        while (matcher.find()) {
+            regexList.add(matcher.group(1));
+        }
+        return regexList;
     }
 }
