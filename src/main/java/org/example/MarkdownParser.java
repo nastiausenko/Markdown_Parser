@@ -16,8 +16,8 @@ public class MarkdownParser {
     private static final String boldRegex = "(?<=[ ,.:;\\n\\t]|^)\\*\\*(?=\\S)(.+?)(?<=\\S)\\*\\*(?=[ ,.:;\\n\\t]|$)";
     private static final String italicRegex = "(?<=[ ,.:;\\n\\t]|^)_(?=\\S)(.+?)(?<=\\S)_(?=[ ,.:;\\n\\t]|$)";
     private static final String monospacedRegex = "(?<=[ ,.:;\\n\\t]|^)`(?=\\S)(.+?)(?=\\S)`(?=[ ,.:;\\n\\t]|$)";
-
-    private final String preformatedRegex = "(?m)(^\\\\n?|^)```(.*?)```(\\\\n?|$)";
+    private static final String preformattedRegex = "(?m)(^\\\\n?|^)```(.*?)```(\\\\n?|$)";
+    private final List<String> preformattedText = new ArrayList<>();
 
     public MarkdownParser(String path, String out) {
         this.path = path;
@@ -26,7 +26,10 @@ public class MarkdownParser {
 
     public void parse() throws IOException {
         String file = readFile();
+
+        file = removePreformattedText(file);
         file = processInlineElements(file);
+        file = setPreformattedText(file);
 
         if (out != null) {
             writeFile(file, out);
@@ -109,5 +112,22 @@ public class MarkdownParser {
         if (count % 2 != 0) {
             throw new IllegalArgumentException("ERROR: unpaired markup");
         }
+    }
+
+    private String removePreformattedText(String text) {
+        Pattern preformattedPattern = Pattern.compile(preformattedRegex, Pattern.DOTALL);
+        Matcher matcher = preformattedPattern.matcher(text);
+        while (matcher.find()) {
+            preformattedText.add(matcher.group());
+        }
+        return text.replaceAll("```([\\s\\S]*?)```", "PRE");
+    }
+
+    private String setPreformattedText(String text) {
+        for (String cur : preformattedText) {
+            String html = "<pre>" + cur.replaceAll("```", "") + "</pre>";
+            text = text.replaceFirst("PRE", html);
+        }
+        return text;
     }
 }
