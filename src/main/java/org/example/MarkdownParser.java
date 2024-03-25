@@ -21,7 +21,12 @@ public class MarkdownParser {
 
     public void parse() throws IOException {
         String file = readFile();
-        System.out.println(file);
+
+        if (out != null) {
+            writeFile(file, out);
+        } else {
+            System.out.println(file);
+        }
     }
 
     private String readFile() throws IOException {
@@ -30,5 +35,13 @@ public class MarkdownParser {
             throw new IOException("File not found");
         }
         return Files.readString(pathToFile);
+    }
+
+    private void writeFile(String text, String outputFile) throws IOException {
+        Path outputPath = Paths.get(outputFile);
+        if (!Files.exists(outputPath.getParent())) {
+            Files.createDirectories(outputPath.getParent());
+        }
+        Files.writeString(outputPath, text);
     }
 }
