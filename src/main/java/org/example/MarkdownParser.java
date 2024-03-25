@@ -56,6 +56,7 @@ public class MarkdownParser {
         List<String> monospacedBlocks = getMatchPatternList(monospacedRegex, html);
         List<String> italicBlocks = getMatchPatternList(italicRegex, html);
 
+        checkUnpairedMarkup(html);
         checkNested(boldRegex, italicRegex, monospacedBlocks);
         checkNested(boldRegex, monospacedRegex, italicBlocks);
         checkNested(italicRegex, monospacedRegex, boldBlocks);
@@ -73,7 +74,7 @@ public class MarkdownParser {
             Matcher firstMatcher = firstPattern.matcher(regex);
             Matcher secondMatcher = secondPattern.matcher(regex);
             if (firstMatcher.find() || secondMatcher.find()) {
-                throw new IllegalArgumentException("ERROR: There is nested markers");
+                throw new IllegalArgumentException("ERROR: nested markup");
             }
         }
     }
@@ -86,5 +87,27 @@ public class MarkdownParser {
             regexList.add(matcher.group(1));
         }
         return regexList;
+    }
+
+    private final Pattern[] markupParts = {
+            Pattern.compile("(?<=[ ,.:;\\n\\t]|^)\\*\\*(?=\\S)"),
+            Pattern.compile("(?<=\\S)\\*\\*(?=[ ,.:;\\n\\t]|$)"),
+            Pattern.compile("(?<=[ ,.:;\\n\\t]|^)_(?=\\S)"),
+            Pattern.compile("(?<=\\S)_(?=[ ,.:;\\n\\t]|$)"),
+            Pattern.compile("(?<=[ ,.:;\\n\\t]|^)`(?=\\S)"),
+            Pattern.compile("(?=\\S)`(?=[ ,.:;\\n\\t]|$)")
+    };
+
+    private void checkUnpairedMarkup(String target) {
+        int count = 0;
+        for (Pattern part : markupParts) {
+            Matcher matcher = part.matcher(target);
+            while (matcher.find()) {
+                count++;
+            }
+        }
+        if (count % 2 != 0) {
+            throw new IllegalArgumentException("ERROR: unpaired markup");
+        }
     }
 }
