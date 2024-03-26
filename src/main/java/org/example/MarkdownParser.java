@@ -88,7 +88,7 @@ public class MarkdownParser {
         while (matcher.find()) {
             String preformattedBlock = matcher.group();
             if (!preformattedBlock.matches("(?s)```\\s*\n.*?\n```")) {
-                throw new IllegalArgumentException("ERROR: invalid preformatted text");
+                throw new MarkdownException("ERROR: invalid preformatted text");
             }
             preformattedText.add(matcher.group());
         }

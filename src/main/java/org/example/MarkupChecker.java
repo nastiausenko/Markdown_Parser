@@ -15,7 +15,7 @@ public class MarkupChecker {
             Matcher firstMatcher = firstPattern.matcher(regex);
             Matcher secondMatcher = secondPattern.matcher(regex);
             if (firstMatcher.find() || secondMatcher.find()) {
-                throw new IllegalArgumentException("ERROR: nested markup");
+                throw new MarkdownException("ERROR: nested markup");
             }
         }
     }
@@ -37,7 +37,7 @@ public class MarkupChecker {
         for (String word : words) {
             if (word.startsWith(markup) && !word.endsWith(markup) ||
                     word.endsWith(markup) && !word.startsWith(markup)) {
-                throw new IllegalArgumentException("Error: unpaired markup");
+                throw new MarkdownException("Error: unpaired markup");
             }
             hasInnerMarkup(word, markup);
         }
@@ -56,13 +56,13 @@ public class MarkupChecker {
             if (word.startsWith(markup) ) {
                 result = word.substring(markup.length());
                 if (result.startsWith(mark)) {
-                    throw new IllegalArgumentException("ERROR: nested markup");
+                    throw new MarkdownException("ERROR: nested markup");
                 }
             }
             if (word.endsWith(markup)) {
                 result = word.substring(0,word.length()-1);
                 if (result.endsWith(mark)) {
-                    throw new IllegalArgumentException("ERROR: nested markup");
+                    throw new MarkdownException("ERROR: nested markup");
                 }
             }
         }
