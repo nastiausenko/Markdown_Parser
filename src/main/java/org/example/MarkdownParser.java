@@ -56,30 +56,14 @@ public class MarkdownParser {
 
     private String processInlineElements(String html) {
         MarkupChecker markupChecker = new MarkupChecker();
-        List<String> boldBlocks = getMatchPatternList(BOLD_REGEX, html);
-        List<String> monospacedBlocks = getMatchPatternList(MONOSPACED_REGEX, html);
-        List<String> italicBlocks = getMatchPatternList(ITALIC_REGEX, html);
 
         markupChecker.checkUnpairedMarkup(html);
-        markupChecker.checkNested(BOLD_REGEX, ITALIC_REGEX, monospacedBlocks);
-        markupChecker.checkNested(BOLD_REGEX, MONOSPACED_REGEX, italicBlocks);
-        markupChecker.checkNested(ITALIC_REGEX, MONOSPACED_REGEX, boldBlocks);
 
         html = html.replaceAll(BOLD_REGEX, "<b>$1</b>");
         html = html.replaceAll(ITALIC_REGEX, "<i>$1</i>");
         html = html.replaceAll(MONOSPACED_REGEX, "<tt>$1</tt>");
         html = setParagraphs(html);
         return html;
-    }
-
-    private List<String> getMatchPatternList(String regex, String html) {
-        List<String> regexList = new ArrayList<>();
-        Pattern pattern = Pattern.compile(regex, Pattern.DOTALL);
-        Matcher matcher = pattern.matcher(html);
-        while (matcher.find()) {
-            regexList.add(matcher.group(1));
-        }
-        return regexList;
     }
 
     private String removePreformattedText(String text) {
