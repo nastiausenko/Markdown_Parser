@@ -13,10 +13,10 @@ import java.util.regex.Pattern;
 public class MarkdownParser {
     private final String path;
     private final String out;
-    String boldRegex = "(?<![\\w`*\u0400-\u04FF])\\*\\*(\\S(?:.*?\\S)?)\\*\\*(?![\\w`*\u0400-\u04FF])";
-    String italicRegex = "(?<![\\w`*\\u0400-\\u04FF])_(\\S(?:.*?\\S)?)_(?![\\w`*\\u0400-\\u04FF])";
-    String monospacedRegex = "(?<![\\w`*\\u0400-\\u04FF])`(\\S(?:.*?\\S)?)`(?![\\w`*\\u0400-\\u04FF])";
-    String preformattedRegex = "```([\\s\\S]*?)```";
+    private static final String BOLD_REGEX = "(?<![\\w`*\u0400-\u04FF])\\*\\*(\\S(?:.*?\\S)?)\\*\\*(?![\\w`*\u0400-\u04FF])";
+    private static final String ITALIC_REGEX = "(?<![\\w`*\\u0400-\\u04FF])_(\\S(?:.*?\\S)?)_(?![\\w`*\\u0400-\\u04FF])";
+    private static final String MONOSPACED_REGEX = "(?<![\\w`*\\u0400-\\u04FF])`(\\S(?:.*?\\S)?)`(?![\\w`*\\u0400-\\u04FF])";
+    private static final String PREFORMATTED_REGEX = "```([\\s\\S]*?)```";
     private final List<String> preformattedText = new ArrayList<>();
 
     public MarkdownParser(String path, String out) {
@@ -55,18 +55,18 @@ public class MarkdownParser {
     }
 
     private String processInlineElements(String html) {
-        List<String> boldBlocks = getMatchPatternList(boldRegex, html);
-        List<String> monospacedBlocks = getMatchPatternList(monospacedRegex, html);
-        List<String> italicBlocks = getMatchPatternList(italicRegex, html);
+        List<String> boldBlocks = getMatchPatternList(BOLD_REGEX, html);
+        List<String> monospacedBlocks = getMatchPatternList(MONOSPACED_REGEX, html);
+        List<String> italicBlocks = getMatchPatternList(ITALIC_REGEX, html);
 
         checkUnpairedMarkup(html);
-        checkNested(boldRegex, italicRegex, monospacedBlocks);
-        checkNested(boldRegex, monospacedRegex, italicBlocks);
-        checkNested(italicRegex, monospacedRegex, boldBlocks);
+        checkNested(BOLD_REGEX, ITALIC_REGEX, monospacedBlocks);
+        checkNested(BOLD_REGEX, MONOSPACED_REGEX, italicBlocks);
+        checkNested(ITALIC_REGEX, MONOSPACED_REGEX, boldBlocks);
 
-        html = html.replaceAll(boldRegex, "<b>$1</b>");
-        html = html.replaceAll(italicRegex, "<i>$1</i>");
-        html = html.replaceAll(monospacedRegex, "<tt>$1</tt>");
+        html = html.replaceAll(BOLD_REGEX, "<b>$1</b>");
+        html = html.replaceAll(ITALIC_REGEX, "<i>$1</i>");
+        html = html.replaceAll(MONOSPACED_REGEX, "<tt>$1</tt>");
         html = setParagraphs(html);
         return html;
     }
@@ -94,9 +94,9 @@ public class MarkdownParser {
     }
 
     private void checkUnpairedMarkup(String text) {
-        text = text.replaceAll(boldRegex, "BOLD");
-        text = text.replaceAll(italicRegex, "ITALIC");
-        text = text.replaceAll(monospacedRegex, "MONO");
+        text = text.replaceAll(BOLD_REGEX, "BOLD");
+        text = text.replaceAll(ITALIC_REGEX, "ITALIC");
+        text = text.replaceAll(MONOSPACED_REGEX, "MONO");
         hasUnpairedMarkup(text, "**");
         hasUnpairedMarkup(text, "`");
         hasUnpairedMarkup(text, "_");
@@ -113,7 +113,7 @@ public class MarkdownParser {
     }
 
     private String removePreformattedText(String text) {
-        Pattern preformattedPattern = Pattern.compile(preformattedRegex, Pattern.DOTALL);
+        Pattern preformattedPattern = Pattern.compile(PREFORMATTED_REGEX, Pattern.DOTALL);
         Matcher matcher = preformattedPattern.matcher(text);
         while (matcher.find()) {
             String preformattedBlock = matcher.group();
@@ -122,7 +122,7 @@ public class MarkdownParser {
             }
             preformattedText.add(matcher.group());
         }
-        return text.replaceAll("```([\\s\\S]*?)```", "PRE");
+        return text.replaceAll(PREFORMATTED_REGEX, "PRE");
     }
 
     private String setPreformattedText(String text) {
