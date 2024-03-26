@@ -27,7 +27,9 @@ public class MarkdownParser {
     public void parse() throws IOException {
         String file = readFile();
 
+        file = removePreformattedText(file);
         file = processInlineElements(file);
+        file = setPreformattedText(file);
 
         if (out != null) {
             writeFile(file, out);
@@ -58,7 +60,6 @@ public class MarkdownParser {
         List<String> italicBlocks = getMatchPatternList(italicRegex, html);
 
         checkUnpairedMarkup(html);
-        html = removePreformattedText(html);
         checkNested(boldRegex, italicRegex, monospacedBlocks);
         checkNested(boldRegex, monospacedRegex, italicBlocks);
         checkNested(italicRegex, monospacedRegex, boldBlocks);
@@ -66,7 +67,6 @@ public class MarkdownParser {
         html = html.replaceAll(boldRegex, "<b>$1</b>");
         html = html.replaceAll(italicRegex, "<i>$1</i>");
         html = html.replaceAll(monospacedRegex, "<tt>$1</tt>");
-        html = setPreformattedText(html);
         return html;
     }
 
