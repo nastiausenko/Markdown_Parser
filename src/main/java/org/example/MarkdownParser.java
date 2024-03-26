@@ -105,7 +105,8 @@ public class MarkdownParser {
     private void hasUnpairedMarkup(String text, String markup) {
         String[] words = text.split("\\s+");
         for (String word : words) {
-            if (word.contains(markup) && (!word.endsWith(markup) || !word.startsWith(markup))) {
+            if (word.startsWith(markup) && !word.endsWith(markup) ||
+                    word.endsWith(markup) && !word.startsWith(markup)) {
                 throw new IllegalArgumentException("Error: unpaired markup");
             }
         }
