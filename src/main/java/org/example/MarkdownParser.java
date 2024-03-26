@@ -30,6 +30,7 @@ public class MarkdownParser {
         file = removePreformattedText(file);
         file = processInlineElements(file);
         file = setPreformattedText(file);
+        file = setParagraphs(file);
 
         if (out != null) {
             writeFile(file, out);
@@ -129,5 +130,14 @@ public class MarkdownParser {
             text = text.replaceFirst("PRE", html);
         }
         return text;
+    }
+
+    private String setParagraphs(String text) {
+        String[] paragraphs = text.split("\\n{2,}");
+        StringBuilder result = new StringBuilder();
+        for (String paragraph : paragraphs) {
+            result.append("<p>").append(paragraph.trim()).append("</p>\n");
+        }
+        return result.toString().trim();
     }
 }
