@@ -13,10 +13,10 @@ import java.util.regex.Pattern;
 public class MarkdownParser {
     private final String path;
     private final String out;
-    private static final String boldRegex = "(?<=[ ,.:;\\n\\t]|^)\\*\\*(?=\\S)(.+?)(?<=\\S)\\*\\*(?=[ ,.:;\\n\\t]|$)";
-    private static final String italicRegex = "(?<=[ ,.:;\\n\\t]|^)_(?=\\S)(.+?)(?<=\\S)_(?=[ ,.:;\\n\\t]|$)";
-    private static final String monospacedRegex = "(?<=[ ,.:;\\n\\t]|^)`(?=\\S)(.+?)(?=\\S)`(?=[ ,.:;\\n\\t]|$)";
-    private static final String preformattedRegex = "(?m)(^\\\\n?|^)```(.*?)```(\\\\n?|$)";
+    String boldRegex = "(?<![\\w`*\u0400-\u04FF])\\*\\*(\\S(?:.*?\\S)?)\\*\\*(?![\\w`*\u0400-\u04FF])";
+    String italicRegex = "(?<![\\w`*\\u0400-\\u04FF])_(\\S(?:.*?\\S)?)_(?![\\w`*\\u0400-\\u04FF])";
+    String monospacedRegex = "(?<![\\w`*\\u0400-\\u04FF])`(\\S(?:.*?\\S)?)`(?![\\w`*\\u0400-\\u04FF])";
+    String preformattedRegex = "```([\\s\\S]*?)```";
     private final List<String> preformattedText = new ArrayList<>();
 
     public MarkdownParser(String path, String out) {
@@ -40,7 +40,7 @@ public class MarkdownParser {
 
     private String readFile() throws IOException {
         Path pathToFile = Paths.get(path);
-        if(!Files.exists(pathToFile)) {
+        if (!Files.exists(pathToFile)) {
             throw new IOException("File not found");
         }
         return Files.readString(pathToFile);
@@ -93,25 +93,21 @@ public class MarkdownParser {
         return regexList;
     }
 
-    private final Pattern[] markupParts = {
-            Pattern.compile("(?<=[ ,.:;\\n\\t]|^)\\*\\*(?=\\S)"),
-            Pattern.compile("(?<=\\S)\\*\\*(?=[ ,.:;\\n\\t]|$)"),
-            Pattern.compile("(?<=[ ,.:;\\n\\t]|^)_(?=\\S)"),
-            Pattern.compile("(?<=\\S)_(?=[ ,.:;\\n\\t]|$)"),
-            Pattern.compile("(?<=[ ,.:;\\n\\t]|^)`(?=\\S)"),
-            Pattern.compile("(?=\\S)`(?=[ ,.:;\\n\\t]|$)")
-    };
+    private void checkUnpairedMarkup(String text) {
+        text = text.replaceAll(boldRegex, "BOLD");
+        text = text.replaceAll(italicRegex, "ITALIC");
+        text = text.replaceAll(monospacedRegex, "MONO");
+        hasUnpairedMarkup(text, "**");
+        hasUnpairedMarkup(text, "`");
+        hasUnpairedMarkup(text, "_");
+    }
 
-    private void checkUnpairedMarkup(String target) {
-        int count = 0;
-        for (Pattern part : markupParts) {
-            Matcher matcher = part.matcher(target);
-            while (matcher.find()) {
-                count++;
+    private void hasUnpairedMarkup(String text, String markup) {
+        String[] words = text.split("\\s+");
+        for (String word : words) {
+            if (word.contains(markup) && (!word.endsWith(markup) || !word.startsWith(markup))) {
+                throw new IllegalArgumentException("Error: unpaired markup");
             }
-        }
-        if (count % 2 != 0) {
-            throw new IllegalArgumentException("ERROR: unpaired markup");
         }
     }
 
