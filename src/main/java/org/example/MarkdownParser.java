@@ -119,6 +119,10 @@ public class MarkdownParser {
         Pattern preformattedPattern = Pattern.compile(preformattedRegex, Pattern.DOTALL);
         Matcher matcher = preformattedPattern.matcher(text);
         while (matcher.find()) {
+            String preformattedBlock = matcher.group();
+            if (!preformattedBlock.matches("(?s)```\\s*\n.*?\n```")) {
+                throw new IllegalArgumentException("ERROR: invalid preformatted text");
+            }
             preformattedText.add(matcher.group());
         }
         return text.replaceAll("```([\\s\\S]*?)```", "PRE");
