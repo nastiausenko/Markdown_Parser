@@ -54,13 +54,13 @@ public class MarkupChecker {
             if (word.startsWith(markup) ) {
                 result = word.substring(markup.length());
                 if (result.startsWith(mark)) {
-                    throw new MarkdownException("ERROR: nested markup");
+                    throw new MarkdownException("ERROR: unpaired nested markup");
                 }
             }
             if (word.endsWith(markup)) {
                 result = word.substring(0,word.length()-1);
                 if (result.endsWith(mark)) {
-                    throw new MarkdownException("ERROR: nested markup");
+                    throw new MarkdownException("ERROR: unpaired nested markup");
                 }
             }
         }
