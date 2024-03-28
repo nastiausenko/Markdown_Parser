@@ -20,18 +20,18 @@ git clone https://github.com/nastiausenko/Markdown_Parser.git
 
 1. Compile Java files
 ```
-javac src/main/java/org/example/*.java 
+javac -d target src/main/java/org/example/*.java
 ```
 
 2. Run the application
 ```
-java -cp src/main/java org.example.Main <file path>
+java -cp target org.example.Main <file path>
 ```
 
 > **NOTE:** set the --out flag to write the converted fragment to the specified file
 
 ```
-java -cp src/main/java org.example.Main <file path> --out <output file path>
+java -cp target org.example.Main <file path> --out <output file path>
 ```
 
 ## Example
