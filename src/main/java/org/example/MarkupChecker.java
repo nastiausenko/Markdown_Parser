@@ -50,14 +50,15 @@ public class MarkupChecker {
 
     private void hasInnerMarkup(String word, String markup) {
         String result;
+        String regex = "[A-Za-z0-9,\\u0400-\\u04FF]";
         for (String mark: markups) {
-            if (word.startsWith(markup) ) {
+            if (word.startsWith(markup) && word.contains(regex)) {
                 result = word.substring(markup.length());
                 if (result.startsWith(mark)) {
                     throw new MarkdownException("ERROR: unpaired nested markup");
                 }
             }
-            if (word.endsWith(markup)) {
+            if (word.endsWith(markup) && word.contains(regex)) {
                 result = word.substring(0,word.length()-1);
                 if (result.endsWith(mark)) {
                     throw new MarkdownException("ERROR: unpaired nested markup");
